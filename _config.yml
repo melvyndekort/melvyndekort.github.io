@@ -1,10 +1,6 @@
 title: Melvyn's Blog
 author: Melvyn de Kort
-description: |
-  Hello! Welcome to my blog!
-
-  My name is Melvyn de Kort and I’m a Software/Cloud engineer.
-  I’ve always been interested in new technology and new tools. In this blog I try to elaborate on the new tools and techniques that I discover and how I think they can be put to use.
+description:
 
 highlighter: null
 permalink: /:title

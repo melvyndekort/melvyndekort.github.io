@@ -1,11 +1,9 @@
 ---
 layout: post
-title:  "Serverless website"
-categories: cloud
-tags: cloud serverless cloudfront lambda auth0 cookies
+title: Serverless website
 ---
 
-**This post is WIP, it will be completed soon!**
+# This post is WIP, it will be completed soon!
 
 When you start creating a new web application many people start with writing Javascript and HTML for the frontend and something like JAVA or PHP for the backend, but they don't start with thinking about the platform it will run on. I tend to do the latter and first choose where and how I want to deploy my application. Recently I've started working on a small facebook application for my company that had to replace an older application that was running on-premise in one of our servers. I wanted to make it cheap to run, but also use state of the art technology.
 
@@ -19,20 +17,20 @@ I came up with the following setup:
 
 ## AWS S3
 
-TODO
+_TODO_
 
 ## Auth0
 
-TODO
+_TODO_
 
 ## AWS Lambda
 
-TODO
+_TODO_
 
 ## AWS API Gateway
 
-TODO
+_TODO_
 
 ## AWS CloudFront
 
-TODO
+_TODO_
