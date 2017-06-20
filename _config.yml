@@ -1,0 +1,14 @@
+title: Melvyn's Blog
+author: Melvyn de Kort
+description:
+
+highlighter: null
+permalink: /:title
+
+baseurl:
+
+markdown: kramdown
+
+# Custom options:
+# color_scheme: azul|ruby|amber|avocado
+# color_scheme: avocado
