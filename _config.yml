@@ -4,11 +4,12 @@ email: melvyn@dekort.dev
 description: "Melvyn's website and blog"
 baseurl: ""
 url: "https://melvyndekort.github.io/"
-title_description: >-
+title_description: |
   Cloud Architect, Cloud Engineer, Software Developer, Docker enthusiast.<br/>
+  <br/>
   My highest goal is to combine all of my skills to complete the tasks at hand and do so in a DevOps environment.<br/>
   <br/>
-  My skills are AWS, Terraform, Java, Networking, Linux, Docker, SQL, DevOps, Agile and CI/CD.
+  Skills: DevOps, AWS, Terraform, Networking, Linux, Docker, Java and SQL.
 title_image: "https://www.gravatar.com/avatar/bd311a330c06553cba590c582d5130ab?s=500&d=mm"
 google_analytics: "UA-139724189-1"
 disqus_account: 
