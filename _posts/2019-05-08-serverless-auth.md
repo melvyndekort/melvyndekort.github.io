@@ -4,7 +4,7 @@ title:      Serverless authentication
 date:       2019-05-08 13:42:23
 summary:    A blog post how to setup serverless authentication using AWS CloudFront, AWS Lambda and Auth0
 categories: serverless
-thumbnail:  lock-open
+thumbnail:  shield
 tags:
   - serverless
   - security
