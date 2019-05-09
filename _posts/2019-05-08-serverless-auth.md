@@ -34,7 +34,7 @@ Let's see if we can find a cheap, but extremely scalable solution to fix our pro
 
 ### Amazon Cloudfront signed cookies
 
-We need a static content delivery service which can do some form of verification of requests.
+We need a static content delivery service which can do some form of verification on requests.
 Amazon Cloudfront is the Content Delivery Network (CDN) service that Amazon offers. It's directly connected to S3, but also to other Amazon services such as AWS Shield for DDoS mitigation.
 
 One of the Cloudfront features is verification of signed cookies. This means that requests that do not contain a cookie are denied, which is exactly what we want! In order to get such a signed cookie someone or something has to generate it for you.
@@ -82,15 +82,156 @@ In a flow diagram this is what happens:
 We start with configuring the Cloudfront distribution:
 
 ```
-TODO
+resource "aws_cloudfront_distribution" "example" {
+  default_root_object = "index.html"
+  enabled             = true
+  price_class         = "PriceClass_100"
+
+  aliases = [
+    "example.melvyn.dev",
+  ]
+
+  viewer_certificate {
+    acm_certificate_arn      = "${aws_acm_certificate.example.arn}"
+    minimum_protocol_version = "TLSv1"
+    ssl_support_method       = "sni-only"
+  }
+
+  origin {
+    domain_name = "${aws_s3_bucket.example.bucket_domain_name}"
+    origin_id   = "example"
+
+    s3_origin_config {
+      origin_access_identity = "${aws_cloudfront_origin_access_identity.example.cloudfront_access_identity_path}"
+    }
+  }
+
+  default_cache_behavior {
+    target_origin_id       = "example"
+    allowed_methods        = ["GET", "HEAD"]
+    cached_methods         = ["GET", "HEAD"]
+    viewer_protocol_policy = "redirect-to-https"
+    min_ttl                = 0
+    default_ttl            = 0
+    max_ttl                = 0
+    compress               = true
+
+    trusted_signers = ["self"]
+
+    forwarded_values {
+      query_string = false
+
+      cookies {
+        forward = "none"
+      }
+    }
+  }
+
+  ordered_cache_behavior {
+    path_pattern           = "/error-pages/*"
+    target_origin_id       = "example"
+    allowed_methods        = ["GET", "HEAD"]
+    cached_methods         = ["GET", "HEAD"]
+    viewer_protocol_policy = "redirect-to-https"
+    min_ttl                = 0
+    default_ttl            = 0
+    max_ttl                = 0
+    compress               = true
+
+    forwarded_values {
+      query_string = false
+
+      cookies {
+        forward = "none"
+      }
+    }
+  }
+
+  ordered_cache_behavior {
+    path_pattern           = "/assets/*"
+    target_origin_id       = "example"
+    allowed_methods        = ["GET", "HEAD"]
+    cached_methods         = ["GET", "HEAD"]
+    viewer_protocol_policy = "redirect-to-https"
+    min_ttl                = 0
+    default_ttl            = 0
+    max_ttl                = 0
+    compress               = true
+
+    forwarded_values {
+      query_string = false
+
+      cookies {
+        forward = "none"
+      }
+    }
+  }
+
+  ordered_cache_behavior {
+    path_pattern           = "/callback.html"
+    target_origin_id       = "example"
+    allowed_methods        = ["GET", "HEAD"]
+    cached_methods         = ["GET", "HEAD"]
+    viewer_protocol_policy = "redirect-to-https"
+    min_ttl                = 0
+    default_ttl            = 0
+    max_ttl                = 0
+    compress               = true
+
+    forwarded_values {
+      query_string = false
+
+      cookies {
+        forward = "none"
+      }
+    }
+  }
+
+  custom_error_response {
+    error_caching_min_ttl = 0
+    error_code            = 403
+    response_code         = 403
+    response_page_path    = "/error-pages/403.html"
+  }
+
+  custom_error_response {
+    error_caching_min_ttl = 0
+    error_code            = 404
+  }
+
+  restrictions {
+    geo_restriction {
+      restriction_type = "none"
+    }
+  }
+}
 ```
 
-### 401-Unauthorized page
+### 403-Unauthorized page
 
 When a user hasn't logged in yet and navigates to a secured page he needs to be redirected to Auth0. We do this by using a custom 401.html page.
 
 ```
-TODO
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+  <meta http-equiv="refresh" content="0; url=https://mdekort.eu.auth0.com/authorize?response_type=id_token&scope=openid email&client_id=emDpriN0VCVVCjvcAZ10&nonce=04yXcHwu26hdln3j&redirect_uri=https://example.melvyn.dev/callback.html"/>
+  <script type="text/javascript">
+    window.location.href = "https://mdekort.eu.auth0.com/authorize?response_type=id_token&scope=openid email&client_id=emDpriN0VCVVCjvcAZ10&nonce=04yXcHwu26hdln3j&redirect_uri=https://example.melvyn.dev/callback.html"
+  </script>
+
+  <title>Example</title>
+</head>
+
+<body>
+  If you are not redirected automatically, follow this <a href='https://mdekort.eu.auth0.com/authorize?response_type=id_token&scope=openid email&client_id=emDpriN0VCVVCjvcAZ10&nonce=04yXcHwu26hdln3j&redirect_uri=https://example.melvyn.dev/callback.html'>link</a>.
+</body>
+
+</html>
 ```
 
 As you can see we already configure the URL where the client should return to after logging in with Auth0. Auth0 redirects the user to that URL. Since we need to have our Auth0 JWT token converted, we let the client return to a page that handles the conversion.
@@ -100,7 +241,44 @@ As you can see we already configure the URL where the client should return to af
 The browser needs to call our API to convert the token and store the cookie, this is all being handled a single Javascript block:
 
 ```
-TODO
+function getToken() {
+  if (window.location.href.includes('#id_token=')) {
+    var parts = window.location.href.split('#');
+    var token_parts = parts[1].split('=');
+    return token_parts[1];
+  }
+  return '';
+}
+
+function httpGetAsync(endpoint, callback) {
+  var xmlHttp = new XMLHttpRequest();
+  xmlHttp.onreadystatechange = function () {
+    if (xmlHttp.readyState == 4 && xmlHttp.status == 200) {
+      callback(xmlHttp.responseText);
+    }
+  }
+  xmlHttp.open('GET', endpoint, true);
+  xmlHttp.send(null);
+}
+
+function setCookies(responseText) {
+  try {
+    cookieObject = JSON.parse(responseText);
+    expiration = '; Expires=' + new Date(cookieObject.Expiration*1000).toUTCString() + "; ";
+    staticInfo = '; Path=/; Secure';
+
+    document.cookie = 'CloudFront-Policy=' + cookieObject.Policy + expiration + staticInfo;
+    document.cookie = 'CloudFront-Signature=' + cookieObject.Signature + expiration + staticInfo;
+    document.cookie = 'CloudFront-Key-Pair-Id=' + cookieObject.Key + expiration + staticInfo;
+  } catch (e) {
+    alert("We're very sorry, but your token seems to be invalid.")
+  } finally {
+    window.location.href = '/';
+  }
+}
+
+var APIURL = 'https://auth.melvyn.dev/api/convert-jwt?id_token=' + getToken();
+httpGetAsync(APIURL, setCookies);
 ```
 
 ### The convert-jwt API
