@@ -86,7 +86,7 @@ Resources:
   ExampleBucket:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: example.melvyn.dev
+      BucketName: REPLACE-ME
       AccessControl: Private
 
   ExampleBucketPolicy:
@@ -116,7 +116,7 @@ Resources:
           CloudFrontDefaultCertificate: true
 
         Origins:
-          - DomainName: melvyn-example.s3.amazonaws.com
+          - DomainName: !GetAtt ExampleBucket.DomainName
             Id: example
             S3OriginConfig:
               OriginAccessIdentity:
@@ -281,7 +281,7 @@ function setCookies(responseText) {
   }
 }
 
-var APIURL = 'https://auth.melvyn.dev/api/convert-jwt?id_token=' + getToken();
+var APIURL = 'https://REPLACE-ME/api/convert-jwt?id_token=' + getToken();
 httpGetAsync(APIURL, setCookies);
 ~~~
 
