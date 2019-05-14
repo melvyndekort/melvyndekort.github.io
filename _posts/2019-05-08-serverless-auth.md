@@ -22,7 +22,7 @@ tags:
 
 ![security](https://marketplace.canva.com/MAC4Wd8rv5s/1/screen/canva-privacy-policy%2C-it%2C-computer%2C-security%2C-password-MAC4Wd8rv5s.jpg)
 
-Most (frontend) developers at some point create a webpage that should be secured with credentials.
+Most (frontend) developers at some point create a webpage that has to be secured with credentials.
 
 But when you've built your webapp as a static website, you're probably hosting it on something like Amazon S3, Netlify or Github Pages against extremely low cost. Securing a static website normally means you'll need a server which handles the user session or validates a token that the client sends in the headers of its requests.
 
