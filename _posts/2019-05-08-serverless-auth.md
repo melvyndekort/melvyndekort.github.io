@@ -283,15 +283,9 @@ httpGetAsync(APIURL, setCookies);
 
 ### The convert-jwt API
 
-This API consists of 2 parts, the Lambda code and the API:
+This API consists of 2 parts, the Lambda and the API Gateay, I've packaged them with AWS SAM so it can be easily tested and deployed.
 
-```
-TODO
-```
-
-```
-TODO
-```
+The code can be found at https://github.com/melvyndekort/convert-jwt
 
 ## Conclusion
 
