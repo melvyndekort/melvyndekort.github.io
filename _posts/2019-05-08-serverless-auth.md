@@ -285,7 +285,7 @@ httpGetAsync(APIURL, setCookies);
 
 This API consists of 2 parts, the Lambda and the API Gateay, I've packaged them with AWS SAM so it can be easily tested and deployed.
 
-The code is available at [https://github.com/melvyndekort/convert-jwt]
+The code is available at (https://github.com/melvyndekort/convert-jwt)[https://github.com/melvyndekort/convert-jwt]
 
 ## Conclusion
 
