@@ -12,12 +12,6 @@ tags:
   - aws
 ---
 
-## This post is still work in progress!
-
-![progress](https://images.unsplash.com/photo-1533234427049-9e9bb093186d?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=800&q=80)
-
-## The case
-
 ### Securing a static website
 
 ![security](https://marketplace.canva.com/MAC4Wd8rv5s/1/screen/canva-privacy-policy%2C-it%2C-computer%2C-security%2C-password-MAC4Wd8rv5s.jpg)
@@ -29,8 +23,6 @@ But when you've built your webapp as a static website, you're probably hosting i
 The problem with this is that a solution with a running server is less resilient, costly and less scalable. You were probably hosting it on a serverless platform for a reason right?
 
 Let's see if we can find a cheap, but extremely scalable solution to fix our problem!
-
-## The Solution
 
 ### Amazon Cloudfront signed cookies
 
@@ -61,8 +53,6 @@ Together with API Gateway you can build a serverless API which is resilient, che
 
 ![auth-architecture](/images/auth-architecture.png)
 
-## The implementation
-
 ### What is the flow for the user?
 
 I want my users to go through the following flow in order to view my secured page:
@@ -79,139 +69,153 @@ In a flow diagram this is what happens:
 
 ### Cloudfront
 
-We start with configuring the Cloudfront distribution:
+Now let's look at some code!
 
-```
-resource "aws_cloudfront_distribution" "example" {
-  default_root_object = "index.html"
-  enabled             = true
-  price_class         = "PriceClass_100"
+We start with configuring the Cloudfront distribution and S3 bucket:
 
-  aliases = [
-    "example.melvyn.dev",
-  ]
+~~~ yaml
+AWSTemplateFormatVersion: 2010-09-09
 
-  viewer_certificate {
-    acm_certificate_arn      = "${aws_acm_certificate.example.arn}"
-    minimum_protocol_version = "TLSv1"
-    ssl_support_method       = "sni-only"
-  }
+Resources:
+  ExampleIdentity:
+    Type: AWS::CloudFront::CloudFrontOriginAccessIdentity
+    Properties:
+      CloudFrontOriginAccessIdentityConfig:
+        Comment: Identity for example distribution
 
-  origin {
-    domain_name = "${aws_s3_bucket.example.bucket_domain_name}"
-    origin_id   = "example"
+  ExampleBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: example.melvyn.dev
+      AccessControl: Private
 
-    s3_origin_config {
-      origin_access_identity = "${aws_cloudfront_origin_access_identity.example.cloudfront_access_identity_path}"
-    }
-  }
+  ExampleBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket:
+        Ref: ExampleBucket
+      PolicyDocument:
+        Statement:
+          -
+            Effect: Allow
+            Action: s3:GetObject
+            Resource: !Sub '${ExampleBucket.Arn}/*'
+            Principal:
+              CanonicalUser:
+                !GetAtt ExampleIdentity.S3CanonicalUserId
 
-  default_cache_behavior {
-    target_origin_id       = "example"
-    allowed_methods        = ["GET", "HEAD"]
-    cached_methods         = ["GET", "HEAD"]
-    viewer_protocol_policy = "redirect-to-https"
-    min_ttl                = 0
-    default_ttl            = 0
-    max_ttl                = 0
-    compress               = true
+  ExampleDistribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        DefaultRootObject: index.html
+        Enabled: true
+        PriceClass: PriceClass_100
 
-    trusted_signers = ["self"]
+        ViewerCertificate:
+          CloudFrontDefaultCertificate: true
 
-    forwarded_values {
-      query_string = false
+        Origins:
+          - DomainName: melvyn-example.s3.amazonaws.com
+            Id: example
+            S3OriginConfig:
+              OriginAccessIdentity:
+                !Join
+                - ''
+                - - 'origin-access-identity/cloudfront/'
+                  - Ref: ExampleIdentity
 
-      cookies {
-        forward = "none"
-      }
-    }
-  }
+        DefaultCacheBehavior:
+          ViewerProtocolPolicy: redirect-to-https
+          TargetOriginId: example
+          AllowedMethods:
+            - GET
+            - HEAD
+          CachedMethods:
+            - GET
+            - HEAD
+          Compress: true
+          DefaultTTL: 0
+          MaxTTL: 0
+          MinTTL: 0
+          TrustedSigners:
+            - Ref: AWS::AccountId
+          ForwardedValues:
+            QueryString: false
+            Cookies:
+              Forward: none
 
-  ordered_cache_behavior {
-    path_pattern           = "/error-pages/*"
-    target_origin_id       = "example"
-    allowed_methods        = ["GET", "HEAD"]
-    cached_methods         = ["GET", "HEAD"]
-    viewer_protocol_policy = "redirect-to-https"
-    min_ttl                = 0
-    default_ttl            = 0
-    max_ttl                = 0
-    compress               = true
+        CacheBehaviors:
+          - PathPattern: /error-pages/*
+            ViewerProtocolPolicy: redirect-to-https
+            TargetOriginId: example
+            AllowedMethods:
+              - GET
+              - HEAD
+            CachedMethods:
+              - GET
+              - HEAD
+            Compress: true
+            DefaultTTL: 0
+            MaxTTL: 0
+            MinTTL: 0
+            ForwardedValues:
+              QueryString: false
+              Cookies:
+                Forward: none
+          - PathPattern: /assets/*
+            ViewerProtocolPolicy: redirect-to-https
+            TargetOriginId: example
+            AllowedMethods:
+              - GET
+              - HEAD
+            CachedMethods:
+              - GET
+              - HEAD
+            Compress: true
+            DefaultTTL: 0
+            MaxTTL: 0
+            MinTTL: 0
+            ForwardedValues:
+              QueryString: false
+              Cookies:
+                Forward: none
+          - PathPattern: /callback.html
+            ViewerProtocolPolicy: redirect-to-https
+            TargetOriginId: example
+            AllowedMethods:
+              - GET
+              - HEAD
+            CachedMethods:
+              - GET
+              - HEAD
+            Compress: true
+            DefaultTTL: 0
+            MaxTTL: 0
+            MinTTL: 0
+            ForwardedValues:
+              QueryString: false
+              Cookies:
+                Forward: none
 
-    forwarded_values {
-      query_string = false
+        CustomErrorResponses:
+          - ErrorCachingMinTTL: 0
+            ErrorCode: 403
+            ResponseCode: 403
+            ResponsePagePath: /error-pages/403.html
+          - ErrorCachingMinTTL: 0
+            ErrorCode: 404
 
-      cookies {
-        forward = "none"
-      }
-    }
-  }
-
-  ordered_cache_behavior {
-    path_pattern           = "/assets/*"
-    target_origin_id       = "example"
-    allowed_methods        = ["GET", "HEAD"]
-    cached_methods         = ["GET", "HEAD"]
-    viewer_protocol_policy = "redirect-to-https"
-    min_ttl                = 0
-    default_ttl            = 0
-    max_ttl                = 0
-    compress               = true
-
-    forwarded_values {
-      query_string = false
-
-      cookies {
-        forward = "none"
-      }
-    }
-  }
-
-  ordered_cache_behavior {
-    path_pattern           = "/callback.html"
-    target_origin_id       = "example"
-    allowed_methods        = ["GET", "HEAD"]
-    cached_methods         = ["GET", "HEAD"]
-    viewer_protocol_policy = "redirect-to-https"
-    min_ttl                = 0
-    default_ttl            = 0
-    max_ttl                = 0
-    compress               = true
-
-    forwarded_values {
-      query_string = false
-
-      cookies {
-        forward = "none"
-      }
-    }
-  }
-
-  custom_error_response {
-    error_caching_min_ttl = 0
-    error_code            = 403
-    response_code         = 403
-    response_page_path    = "/error-pages/403.html"
-  }
-
-  custom_error_response {
-    error_caching_min_ttl = 0
-    error_code            = 404
-  }
-
-  restrictions {
-    geo_restriction {
-      restriction_type = "none"
-    }
-  }
-}
-```
+        Restrictions:
+          GeoRestriction:
+            RestrictionType: none
+~~~
 
 ### 403-Unauthorized page
 
 When a user hasn't logged in yet and navigates to a secured page he needs to be redirected to Auth0. We do this by using a custom 401.html page.
 
-```
+~~~ html
 <!doctype html>
 <html lang="en">
 
@@ -219,20 +223,20 @@ When a user hasn't logged in yet and navigates to a secured page he needs to be 
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
-  <meta http-equiv="refresh" content="0; url=https://mdekort.eu.auth0.com/authorize?response_type=id_token&scope=openid email&client_id=emDpriN0VCVVCjvcAZ10&nonce=04yXcHwu26hdln3j&redirect_uri=https://example.melvyn.dev/callback.html"/>
+  <meta http-equiv="refresh" content="0; url=https://mdekort.eu.auth0.com/authorize?response_type=id_token&scope=openid email&client_id=emDpriN0VCVVCjvcAZ10&nonce=04yXcHwu26hdln3j&redirect_uri=https://REPLACE-ME/callback.html"/>
   <script type="text/javascript">
-    window.location.href = "https://mdekort.eu.auth0.com/authorize?response_type=id_token&scope=openid email&client_id=emDpriN0VCVVCjvcAZ10&nonce=04yXcHwu26hdln3j&redirect_uri=https://example.melvyn.dev/callback.html"
+    window.location.href = "https://mdekort.eu.auth0.com/authorize?response_type=id_token&scope=openid email&client_id=emDpriN0VCVVCjvcAZ10&nonce=04yXcHwu26hdln3j&redirect_uri=https://REPLACE-ME/callback.html"
   </script>
 
   <title>Example</title>
 </head>
 
 <body>
-  If you are not redirected automatically, follow this <a href='https://mdekort.eu.auth0.com/authorize?response_type=id_token&scope=openid email&client_id=emDpriN0VCVVCjvcAZ10&nonce=04yXcHwu26hdln3j&redirect_uri=https://example.melvyn.dev/callback.html'>link</a>.
+  If you are not redirected automatically, follow this <a href='https://mdekort.eu.auth0.com/authorize?response_type=id_token&scope=openid email&client_id=emDpriN0VCVVCjvcAZ10&nonce=04yXcHwu26hdln3j&redirect_uri=https://REPLACE-ME/callback.html'>link</a>.
 </body>
 
 </html>
-```
+~~~
 
 As you can see we already configure the URL where the client should return to after logging in with Auth0. Auth0 redirects the user to that URL. Since we need to have our Auth0 JWT token converted, we let the client return to a page that handles the conversion.
 
@@ -240,7 +244,7 @@ As you can see we already configure the URL where the client should return to af
 
 The browser needs to call our API to convert the token and store the cookie, this is all being handled a single Javascript block:
 
-```
+~~~ javascript
 function getToken() {
   if (window.location.href.includes('#id_token=')) {
     var parts = window.location.href.split('#');
@@ -279,13 +283,13 @@ function setCookies(responseText) {
 
 var APIURL = 'https://auth.melvyn.dev/api/convert-jwt?id_token=' + getToken();
 httpGetAsync(APIURL, setCookies);
-```
+~~~
 
 ### The convert-jwt API
 
 This API consists of 2 parts, the Lambda and the API Gateay, I've packaged them with AWS SAM so it can be easily tested and deployed.
 
-The code is available at <https://github.com/melvyndekort/convert-jwt>
+The project is available at <https://github.com/melvyndekort/convert-jwt>
 
 ## Conclusion
 
