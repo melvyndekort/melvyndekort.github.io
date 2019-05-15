@@ -232,7 +232,7 @@ When a user hasn't logged in yet and navigates to a secured page he needs to be 
 </head>
 
 <body>
-  If you are not redirected automatically, follow this <a href='https://mdekort.eu.auth0.com/authorize?response_type=id_token&scope=openid email&client_id=CHANGEME&nonce=CHANGEME&redirect_uri=https://CHANGEME/callback.html'>link</a>.
+  If you are not redirected automatically, follow this <a href="https://mdekort.eu.auth0.com/authorize?response_type=id_token&scope=openid email&client_id=CHANGEME&nonce=CHANGEME&redirect_uri=https://CHANGEME/callback.html">link</a>.
 </body>
 
 </html>
