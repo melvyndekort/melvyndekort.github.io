@@ -81,13 +81,13 @@ Resources:
     Type: AWS::CloudFront::CloudFrontOriginAccessIdentity
     Properties:
       CloudFrontOriginAccessIdentityConfig:
-        Comment: Identity for example distribution
+        Comment: 'Identity for example distribution'
 
   ExampleBucket:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: REPLACE-ME
-      AccessControl: Private
+      BucketName: 'CHANGEME'
+      AccessControl: 'Private'
 
   ExampleBucketPolicy:
     Type: AWS::S3::BucketPolicy
@@ -97,8 +97,8 @@ Resources:
       PolicyDocument:
         Statement:
           -
-            Effect: Allow
-            Action: s3:GetObject
+            Effect: 'Allow'
+            Action: 's3:GetObject'
             Resource: !Sub '${ExampleBucket.Arn}/*'
             Principal:
               CanonicalUser:
@@ -108,16 +108,16 @@ Resources:
     Type: AWS::CloudFront::Distribution
     Properties:
       DistributionConfig:
-        DefaultRootObject: index.html
+        DefaultRootObject: 'index.html'
         Enabled: true
-        PriceClass: PriceClass_100
+        PriceClass: 'PriceClass_100'
 
         ViewerCertificate:
           CloudFrontDefaultCertificate: true
 
         Origins:
           - DomainName: !GetAtt ExampleBucket.DomainName
-            Id: example
+            Id: 'example'
             S3OriginConfig:
               OriginAccessIdentity:
                 !Join
@@ -126,14 +126,14 @@ Resources:
                   - Ref: ExampleIdentity
 
         DefaultCacheBehavior:
-          ViewerProtocolPolicy: redirect-to-https
-          TargetOriginId: example
+          ViewerProtocolPolicy: 'redirect-to-https'
+          TargetOriginId: 'example'
           AllowedMethods:
-            - GET
-            - HEAD
+            - 'GET'
+            - 'HEAD'
           CachedMethods:
-            - GET
-            - HEAD
+            - 'GET'
+            - 'HEAD'
           Compress: true
           DefaultTTL: 0
           MaxTTL: 0
@@ -143,18 +143,18 @@ Resources:
           ForwardedValues:
             QueryString: false
             Cookies:
-              Forward: none
+              Forward: 'none'
 
         CacheBehaviors:
-          - PathPattern: /error-pages/*
-            ViewerProtocolPolicy: redirect-to-https
-            TargetOriginId: example
+          - PathPattern: '/error-pages/*'
+            ViewerProtocolPolicy: 'redirect-to-https'
+            TargetOriginId: 'example'
             AllowedMethods:
-              - GET
-              - HEAD
+              - 'GET'
+              - 'HEAD'
             CachedMethods:
-              - GET
-              - HEAD
+              - 'GET'
+              - 'HEAD'
             Compress: true
             DefaultTTL: 0
             MaxTTL: 0
@@ -162,16 +162,16 @@ Resources:
             ForwardedValues:
               QueryString: false
               Cookies:
-                Forward: none
-          - PathPattern: /assets/*
-            ViewerProtocolPolicy: redirect-to-https
-            TargetOriginId: example
+                Forward: 'none'
+          - PathPattern: '/assets/*'
+            ViewerProtocolPolicy: 'redirect-to-https'
+            TargetOriginId: 'example'
             AllowedMethods:
-              - GET
-              - HEAD
+              - 'GET'
+              - 'HEAD'
             CachedMethods:
-              - GET
-              - HEAD
+              - 'GET'
+              - 'HEAD'
             Compress: true
             DefaultTTL: 0
             MaxTTL: 0
@@ -179,16 +179,16 @@ Resources:
             ForwardedValues:
               QueryString: false
               Cookies:
-                Forward: none
-          - PathPattern: /callback.html
-            ViewerProtocolPolicy: redirect-to-https
-            TargetOriginId: example
+                Forward: 'none'
+          - PathPattern: '/callback.html'
+            ViewerProtocolPolicy: 'redirect-to-https'
+            TargetOriginId: 'example'
             AllowedMethods:
-              - GET
-              - HEAD
+              - 'GET'
+              - 'HEAD'
             CachedMethods:
-              - GET
-              - HEAD
+              - 'GET'
+              - 'HEAD'
             Compress: true
             DefaultTTL: 0
             MaxTTL: 0
@@ -196,19 +196,19 @@ Resources:
             ForwardedValues:
               QueryString: false
               Cookies:
-                Forward: none
+                Forward: 'none'
 
         CustomErrorResponses:
           - ErrorCachingMinTTL: 0
             ErrorCode: 403
             ResponseCode: 403
-            ResponsePagePath: /error-pages/403.html
+            ResponsePagePath: '/error-pages/403.html'
           - ErrorCachingMinTTL: 0
             ErrorCode: 404
 
         Restrictions:
           GeoRestriction:
-            RestrictionType: none
+            RestrictionType: 'none'
 ~~~
 
 ### 403-Unauthorized page
@@ -223,16 +223,16 @@ When a user hasn't logged in yet and navigates to a secured page he needs to be 
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
-  <meta http-equiv="refresh" content="0; url=https://mdekort.eu.auth0.com/authorize?response_type=id_token&scope=openid email&client_id=emDpriN0VCVVCjvcAZ10&nonce=04yXcHwu26hdln3j&redirect_uri=https://REPLACE-ME/callback.html"/>
+  <meta http-equiv="refresh" content="0; url=https://mdekort.eu.auth0.com/authorize?response_type=id_token&scope=openid email&client_id=CHANGEME&nonce=CHANGEME&redirect_uri=https://CHANGEME/callback.html"/>
   <script type="text/javascript">
-    window.location.href = "https://mdekort.eu.auth0.com/authorize?response_type=id_token&scope=openid email&client_id=emDpriN0VCVVCjvcAZ10&nonce=04yXcHwu26hdln3j&redirect_uri=https://REPLACE-ME/callback.html"
+    window.location.href = "https://mdekort.eu.auth0.com/authorize?response_type=id_token&scope=openid email&client_id=CHANGEME&nonce=CHANGEME&redirect_uri=https://CHANGEME/callback.html"
   </script>
 
   <title>Example</title>
 </head>
 
 <body>
-  If you are not redirected automatically, follow this <a href='https://mdekort.eu.auth0.com/authorize?response_type=id_token&scope=openid email&client_id=emDpriN0VCVVCjvcAZ10&nonce=04yXcHwu26hdln3j&redirect_uri=https://REPLACE-ME/callback.html'>link</a>.
+  If you are not redirected automatically, follow this <a href='https://mdekort.eu.auth0.com/authorize?response_type=id_token&scope=openid email&client_id=CHANGEME&nonce=CHANGEME&redirect_uri=https://CHANGEME/callback.html'>link</a>.
 </body>
 
 </html>
@@ -281,7 +281,7 @@ function setCookies(responseText) {
   }
 }
 
-var APIURL = 'https://REPLACE-ME/api/convert-jwt?id_token=' + getToken();
+var APIURL = 'https://CHANGEME/api/convert-jwt?id_token=' + getToken();
 httpGetAsync(APIURL, setCookies);
 ~~~
 
